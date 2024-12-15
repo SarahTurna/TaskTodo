@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Import image picker
 import 'package:power_state/power_state.dart';
 import 'package:task_management/features/user_profile/controller/c_updateprofile.dart';
+import 'dart:io'; // Import for File
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -14,8 +16,10 @@ class _UserPageState extends State<UserPage> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker(); // Image picker instance
 
   late CUpdateProfile _controller;
+  XFile? _imageFile; // Selected image file
 
   int _selectedIndex = 3; // Index for Profile Page
 
@@ -70,6 +74,16 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,10 +112,17 @@ class _UserPageState extends State<UserPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Display Profile Image
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(profile.image),
-                  backgroundColor: Colors.blue.withOpacity(0.2),
+                GestureDetector(
+                  onTap: _pickImage, // Open image picker when tapped
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: _imageFile != null
+                        ? FileImage(
+                            File(_imageFile!.path)) // Use FileImage here
+                        : NetworkImage(profile.image)
+                            as ImageProvider<Object>?, // Cast to ImageProvider
+                    backgroundColor: Colors.blue.withOpacity(0.2),
+                  ),
                 ),
                 const SizedBox(height: 16.0),
 
@@ -173,19 +194,6 @@ class _UserPageState extends State<UserPage> {
             ),
           );
         },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.task), label: 'Tasks'),
-          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add Task'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        selectedItemColor: const Color.fromARGB(255, 39, 117, 176),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
       ),
     );
   }

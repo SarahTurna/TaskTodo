@@ -114,33 +114,50 @@ class _HomeState extends State<Home> {
             else
               Card(
                 margin: const EdgeInsets.symmetric(vertical: 8),
-                child: ListTile(
-                  leading: const Icon(Icons.task,
-                      color: Color.fromARGB(255, 39, 114, 176)),
-                  title: Text(title),
-                  subtitle: Text(description),
-                  trailing: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Creator: $creatorEmail'),
-                      Text(
-                          'Created: ${DateTime.tryParse(createdAt)?.toLocal()}'),
-                    ],
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: ListTile(
+                    leading: const Icon(Icons.task,
+                        color: Color.fromARGB(255, 39, 114, 176)),
+                    title: Text(
+                      title,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(description),
+                    trailing: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('Creator: $creatorEmail',
+                            style: const TextStyle(fontSize: 12)),
+                        const SizedBox(height: 4),
+                        Text(
+                            'Created: ${DateTime.tryParse(createdAt)?.toLocal()?.toString() ?? 'N/A'}',
+                            style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
                   ),
                 ),
               ),
 
             const SizedBox(height: 20),
 
-            // Additional Content
+            // Additional Content (Task List)
             Expanded(
-              child: ListView(
-                children: [
-                  _buildTaskListItem(title,
-                      'Created: ${DateTime.tryParse(createdAt)?.toLocal()}'),
-                  _buildTaskListItem(description, 'Creator: $creatorEmail'),
-                ],
+              child: ListView.builder(
+                itemCount: recentTask?.data != null
+                    ? 1
+                    : 0, // Ensure we show only if data exists
+                itemBuilder: (context, index) {
+                  return _buildTaskListItem(
+                    recentTask?.data?.title ?? 'No Title',
+                    'Created: ${DateTime.tryParse(createdAt)?.toLocal()}',
+                  );
+                },
               ),
             ),
           ],
@@ -184,6 +201,10 @@ class _HomeState extends State<Home> {
   Widget _buildTaskListItem(String title, String info) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: ListTile(
         leading: const Icon(Icons.calendar_today,
             color: Color.fromARGB(255, 39, 114, 176)),
