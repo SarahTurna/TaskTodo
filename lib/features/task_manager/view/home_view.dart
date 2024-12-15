@@ -147,21 +147,34 @@ class _HomeState extends State<Home> {
             const SizedBox(height: 20),
 
             // Additional Content (Task List)
-            Expanded(
-              child: ListView.builder(
-                itemCount: recentTask?.data != null
-                    ? 1
-                    : 0, // Ensure we show only if data exists
-                itemBuilder: (context, index) {
-                  return _buildTaskListItem(
-                    recentTask?.data?.title ?? 'No Title',
-                    'Created: ${DateTime.tryParse(createdAt)?.toLocal()}',
-                  );
-                },
+            if (recentTask?.data == null)
+              const Center(child: Text("No tasks available"))
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: 1, // Ensure we show only 1 task if available
+                  itemBuilder: (context, index) {
+                    return _buildTaskListItem(
+                      recentTask!.data!.title,
+                      'Created: ${recentTask.data!.createdAt.toLocal()}',
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTaskListItem(String title, String createdAt) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListTile(
+        leading:
+            const Icon(Icons.task, color: Color.fromARGB(255, 39, 114, 176)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(createdAt),
       ),
     );
   }
@@ -194,23 +207,6 @@ class _HomeState extends State<Home> {
         selectedItemColor: const Color.fromARGB(255, 39, 117, 176),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
-      ),
-    );
-  }
-
-  Widget _buildTaskListItem(String title, String info) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: ListTile(
-        leading: const Icon(Icons.calendar_today,
-            color: Color.fromARGB(255, 39, 114, 176)),
-        title: Text(title),
-        subtitle: Text(info),
-        trailing: const Icon(Icons.more_vert),
       ),
     );
   }
