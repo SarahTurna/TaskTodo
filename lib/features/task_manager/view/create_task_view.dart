@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:power_state/power_state.dart';
+import 'package:task_management/features/task_manager/api/add_task_api.dart';
+import 'package:task_management/features/task_manager/controller/c_add_task.dart';
 import 'package:task_management/features/task_manager/view/home_view.dart';
 import 'package:task_management/features/task_manager/view/tasks_view.dart';
 import 'package:task_management/features/user_profile/view/user_view.dart';
@@ -7,28 +10,32 @@ class NewTaskPage extends StatefulWidget {
   const NewTaskPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _NewTaskPageState createState() => _NewTaskPageState();
 }
 
 class _NewTaskPageState extends State<NewTaskPage> {
-  int _selectedIndex = 0; // BottomNavigationBar index
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
 
-  // Bottom Navigation Bar navigation logic
+  final CAddTask _addTaskController = PowerVault.put(CAddTask());
+
+  int _selectedIndex = 0;
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
 
-      // Add navigation logic here
       if (index == 0) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => const Home()),
         );
       } else if (index == 1) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AllTasksPage()),
+          MaterialPageRoute(builder: (context) => const AllTaskPage()),
         );
       } else if (index == 2) {
         Navigator.pushReplacement(
@@ -44,121 +51,100 @@ class _NewTaskPageState extends State<NewTaskPage> {
     });
   }
 
+  void _createTask() async {
+    final title = _titleController.text;
+    final description = _descriptionController.text;
+    final date = _dateController.text;
+    final time = _timeController.text;
+
+    if (title.isEmpty || description.isEmpty || date.isEmpty || time.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in all fields")),
+      );
+      return;
+    }
+
+    try {
+      final createdAt = DateTime.parse("$date $time");
+
+      // Prepare task data
+      final taskData = {
+        "title": title,
+        "description": description,
+        "createdAt": createdAt.toIso8601String(),
+      };
+
+      _addTaskController.setLoading(true);
+      await _addTaskController.fetchAddTask(taskData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(_addTaskController.addTask?.message ??
+                "Task created successfully")),
+      );
+
+      // Clear the form
+      _titleController.clear();
+      _descriptionController.clear();
+      _dateController.clear();
+      _timeController.clear();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to create task")),
+      );
+    } finally {
+      _addTaskController.setLoading(false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context), // Navigate back
-        ),
         title: const Text('New Task ToDo'),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 60, 109, 222),
         elevation: 1,
         foregroundColor: Colors.black,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.05,
+          vertical: screenHeight * 0.02,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title Task Field
-            const Text(
-              'Title Task',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Add Task Name...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Description Field
-            const Text(
-              'Description',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Add Descriptions...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Date Field
-            const Text(
-              'Date',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'dd/mm/yy',
-                prefixIcon: const Icon(Icons.calendar_today),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Time Field
-            const Text(
-              'Time',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'hh : mm',
-                prefixIcon: const Icon(Icons.access_time),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Buttons
+            _buildInputLabel('Title Task'),
+            _buildTextField(_titleController, 'Add Task Name...'),
+            _buildInputLabel('Description'),
+            _buildTextField(_descriptionController, 'Add Descriptions...',
+                maxLines: 3),
+            _buildInputLabel('Date'),
+            _buildTextField(_dateController, 'yyyy-mm-dd',
+                prefixIcon: const Icon(Icons.calendar_today)),
+            _buildInputLabel('Time'),
+            _buildTextField(_timeController, 'hh:mm',
+                prefixIcon: const Icon(Icons.access_time)),
+            SizedBox(height: screenHeight * 0.03),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                     child: const Text('Cancel'),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: screenWidth * 0.03),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Add Create Task Logic
-                    },
+                    onPressed: _createTask,
                     child: const Text('Create'),
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -172,32 +158,35 @@ class _NewTaskPageState extends State<NewTaskPage> {
         selectedItemColor: const Color.fromARGB(255, 39, 105, 176),
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.task),
-            label: 'Tasks',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: 'Add Task',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.task), label: 'Tasks'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add Task'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
   }
+
+  Widget _buildInputLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String hintText,
+      {int maxLines = 1, Widget? prefixIcon}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: prefixIcon,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
 }
-
-// Dummy Pages for Navigation
-
-
-// void main() => runApp(MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       home: NewTaskPage(),
-//     ));

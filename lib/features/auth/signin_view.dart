@@ -1,153 +1,138 @@
 import 'package:flutter/material.dart';
+import 'package:power_state/power_state.dart';
+import 'package:task_management/controllers/c_auth.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _SignInPageState createState() => _SignInPageState();
+  State<SignInPage> createState() => _SignInPageState();
 }
 
 class _SignInPageState extends State<SignInPage> {
-  bool rememberMe = false; // State variable for the "Remember me" checkbox
-  bool obscurePassword =
-      true; // State variable for toggling password visibility
+  final CAuth authController = PowerVault.find<CAuth>(); // Controller reference
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool rememberMe = false;
+  bool obscurePassword = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _handleLogin() async {
+    await authController.signIn(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    if (authController.userData?.data != null) {
+      final user = authController.userData!.data!.user;
+      debugPrint("Welcome ${user.firstName} ${user.lastName}");
+      // Optionally, navigate or update UI with user details
+    }
+  }
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
 
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 50),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Avatar
-              CircleAvatar(
-                radius: isMobile ? 50 : 80,
-                backgroundColor: const Color.fromARGB(255, 200, 214, 230),
-                child: Icon(
-                  Icons.person,
-                  size: isMobile ? 50 : 80,
-                  color: Color.fromARGB(255, 102, 163, 187),
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: Scaffold(
+        body: Center(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 50),
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Profile Icon
+                CircleAvatar(
+                  radius: isMobile ? 50 : 75,
+                  child: Icon(Icons.person, size: isMobile ? 50 : 75),
                 ),
-              ),
-              const SizedBox(height: 30),
-
-              // Username TextField
-              TextField(
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.person, color: Colors.grey),
-                  hintText: 'Username',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Password TextField
-              TextField(
-                obscureText: obscurePassword,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.lock, color: Colors.grey),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscurePassword ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey,
+                const SizedBox(height: 30),
+                // Email Input Field
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    prefixIcon: const Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        obscurePassword = !obscurePassword;
-                      });
-                    },
-                  ),
-                  hintText: 'Password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-
-              // Remember Me and Forgot Password Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: rememberMe,
-                        onChanged: (value) {
-                          setState(() {
-                            rememberMe = value!;
-                          });
-                        },
-                        activeColor: const Color.fromARGB(255, 92, 76, 175),
+                const SizedBox(height: 20),
+                // Password Input Field
+                TextField(
+                  controller: _passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
-                      const Text('Remember me'),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Login Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.3,
-                    vertical: 15,
-                  ),
-                  backgroundColor: const Color.fromARGB(255, 76, 101, 175),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
                 ),
-                onPressed: () {
-                  // Add login logic here
-                },
-                child: const Text(
-                  'LOGIN',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+                const SizedBox(height: 20),
+                // Remember Me Checkbox
+                Row(
+                  children: [
+                    Checkbox(
+                      value: rememberMe,
+                      onChanged: (value) {
+                        setState(() {
+                          rememberMe = value!;
+                        });
+                      },
+                    ),
+                    const Text("Remember Me"),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Create Account
-              Column(
-                children: [
-                  const Text("Don't have an account?"),
-                  TextButton(
-                    onPressed: () {
-                      // Add navigation to Create Account logic here
-                    },
-                    child: const Text(
-                      'Create Account',
-                      style: TextStyle(color: Color.fromARGB(255, 76, 99, 175)),
+                const SizedBox(height: 20),
+                // Login Button
+                ElevatedButton(
+                  onPressed: _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      vertical: isMobile ? 15 : 20,
+                      horizontal: isMobile ? 50 : 100,
                     ),
                   ),
-                ],
-              ),
-            ],
+                  child: const Text(
+                    "Login",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-// void main() => runApp(MaterialApp(
-//       home: SignInPage(),
-//     ));

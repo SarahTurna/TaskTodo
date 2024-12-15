@@ -1,6 +1,4 @@
 class Urls {
-  static const String baseUrl = "http://206.189.138.45:7152/";
-
   static const String register = "user/register";
   static const String login = "user/login";
   static const String activateUser = "user/activate-user";

@@ -9,14 +9,14 @@ MGetTask mGetTaskFromJson(String str) => MGetTask.fromJson(json.decode(str));
 String mGetTaskToJson(MGetTask data) => json.encode(data.toJson());
 
 class MGetTask {
-  final String status;
-  final String message;
-  final Data data;
+  final String? status;
+  final String? message;
+  final Data? data;
 
   MGetTask({
-    required this.status,
-    required this.message,
-    required this.data,
+    this.status,
+    this.message,
+    this.data,
   });
 
   factory MGetTask.fromJson(Map<String, dynamic> json) => MGetTask(
@@ -28,7 +28,7 @@ class MGetTask {
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
-        "data": data.toJson(),
+        "data": data?.toJson(),
       };
 }
 

@@ -1,26 +1,26 @@
 // To parse this JSON data, do
 //
-//     final mAuthLogin = mAuthLoginFromJson(jsonString);
+//     final mUserProfile = mUserProfileFromJson(jsonString);
 
 import 'dart:convert';
 
-MAuthLogin mAuthLoginFromJson(String str) =>
-    MAuthLogin.fromJson(json.decode(str));
+MUserProfile mUserProfileFromJson(String str) =>
+    MUserProfile.fromJson(json.decode(str));
 
-String mAuthLoginToJson(MAuthLogin data) => json.encode(data.toJson());
+String mUserProfileToJson(MUserProfile data) => json.encode(data.toJson());
 
-class MAuthLogin {
-  String? status;
-  String? message;
-  Data? data;
+class MUserProfile {
+  final String? status;
+  final String? message;
+  final Data? data;
 
-  MAuthLogin({
+  MUserProfile({
     this.status,
     this.message,
     this.data,
   });
 
-  factory MAuthLogin.fromJson(Map<String, dynamic> json) => MAuthLogin(
+  factory MUserProfile.fromJson(Map<String, dynamic> json) => MUserProfile(
         status: json["status"],
         message: json["message"],
         data: Data.fromJson(json["data"]),
@@ -34,43 +34,25 @@ class MAuthLogin {
 }
 
 class Data {
-  User user;
-  String token;
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String password;
+  final String address;
+  final String image;
+  final int activationCode;
+  final bool isVerified;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int v;
 
   Data({
-    required this.user,
-    required this.token,
-  });
-
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
-        user: User.fromJson(json["user"]),
-        token: json["token"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "user": user.toJson(),
-        "token": token,
-      };
-}
-
-class User {
-  String id;
-  String firstName;
-  String lastName;
-  String email;
-  String address;
-  String image;
-  int activationCode;
-  bool isVerified;
-  DateTime createdAt;
-  DateTime updatedAt;
-  int v;
-
-  User({
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.email,
+    required this.password,
     required this.address,
     required this.image,
     required this.activationCode,
@@ -80,11 +62,12 @@ class User {
     required this.v,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
+  factory Data.fromJson(Map<String, dynamic> json) => Data(
         id: json["_id"],
         firstName: json["firstName"],
         lastName: json["lastName"],
         email: json["email"],
+        password: json["password"],
         address: json["address"],
         image: json["image"],
         activationCode: json["activationCode"],
@@ -99,6 +82,7 @@ class User {
         "firstName": firstName,
         "lastName": lastName,
         "email": email,
+        "password": password,
         "address": address,
         "image": image,
         "activationCode": activationCode,

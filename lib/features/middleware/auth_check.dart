@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_management/controllers/c_auth.dart';
 import 'package:task_management/utils/callback.dart';
 import 'package:power_state/power_state.dart';
 
@@ -10,12 +11,12 @@ class AuthCheck extends StatefulWidget {
 }
 
 class _AuthCheckState extends State<AuthCheck> {
-  //final CAuth cAuth = PowerVault.find<CAuth>();
+  final CAuth cAuth = PowerVault.find<CAuth>();
 
   @override
   void initState() {
     callAfterBuild(() {
-      //cAuth.checkUserState();
+      cAuth.checkUserState();
     });
     super.initState();
   }

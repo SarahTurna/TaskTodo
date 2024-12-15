@@ -1,124 +1,75 @@
-// import 'package:dio/dio.dart';
-// import 'package:flutter/material.dart';
-// import 'package:task_management/api%20services/api/auth_api.dart';
-// import 'package:task_management/constants/constant.dart';
-// import 'package:task_management/features/auth/signin_view.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:power_state/power_state.dart';
+import 'package:task_management/api%20services/auth_api.dart';
+import 'package:task_management/constants/constant.dart';
+import 'package:task_management/features/auth/signin_view.dart';
+import 'package:task_management/features/task_manager/view/home_view.dart';
+import 'package:task_management/features/user_profile/model/get_user_profile.dart';
+import 'package:task_management/models/auth_model.dart';
+import 'package:task_management/services/shared_preferences.dart';
+import 'package:task_management/utils/enum.dart';
+import 'package:task_management/utils/helper.dart';
+import 'package:task_management/widgets/navigator.dart';
+import 'package:task_management/widgets/snackbar.dart';
 
-// import 'package:power_state/power_state.dart';
+class CAuth extends PowerController {
+  final AuthAPI _authAPI = AuthAPI();
+  MAuthLogin? userData;
+  MUserProfile? userDetail;
 
-// class CAuth extends PowerController {
-//   final AuthAPI _authAPI = AuthAPI();
-//   MGetAccessToken? userToken;
-//   MGetUserInfo? userInfo;
+  final TextEditingController emailController = TextEditingController();
 
-//   TextEditingController emailController = TextEditingController();
-//   TextEditingController passwordController = TextEditingController();
+  /// Signs in the user with email and password.
+  signIn({required String email, required String password}) async {
+    if (email == '' || password == '') {
+      WSnackbar.show(
+          type: SnackbarType.info,
+          title: "Oops!",
+          description: "You may have forgot to put your email || password!");
+      return;
+    }
+    try {
+      loader();
+      userData = await _authAPI.login(email: email, password: password);
+      SharedPreferencesService.saveString(
+          Pkeys.accessToken, userData?.data?.token ?? '');
 
-//   Future<void> signIn({required String email, required String password}) async {
-//     if (email.isEmpty || password.isEmpty) {
-//       SnackBarPage.show(
-//         type: SnackbarType.info,
-//         title: "Error!",
-//         description: "Email and password cannot be empty.",
-//       );
-//       return;
-//     }
+      if (userData?.status == 'Success') {
+        // ignore: use_build_context_synchronously
+        pushReplacementUntil(screen: const Home());
+      }
+    } catch (e) {
+      print(e);
+      pop();
+      if (e is DioException) {
+        WSnackbar.show(
+            type: SnackbarType.error,
+            title: "Oh snap!",
+            description: getErrorMessage(e));
+      } else {
+        WSnackbar.show(
+            type: SnackbarType.error,
+            title: "Oh snap!",
+            description: "Something issue in backend!");
+      }
+    }
+  }
 
-//     try {
-//       loader(); // Show loader
-//       userToken =
-//           await _authAPI.signInWithToken(email: email, password: password);
-//       SharedPreferencesService.saveString(
-//           Pkeys.accessToken, userToken?.accessToken);
-
-//       if (userToken?.code == 200) {
-//         pushReplacementUntil(screen: const HomePage());
-//       } else {
-//         _handleSignInError(userToken?.code);
-//       }
-//     } on DioException catch (e) {
-//       pop(); // Hide loader
-//       debugPrint('Dio Error: ${e.message}, ${e.response?.data}');
-//       _handleException(e);
-//     } catch (e) {
-//       pop(); // Hide loader
-//       debugPrint('Unknown Error: $e');
-//       SnackBarPage.show(
-//         type: SnackbarType.error,
-//         title: "Error!",
-//         description: "An unknown error occurred.",
-//       );
-//     }
-//   }
-
-//   void _handleSignInError(int? code) {
-//     if (code == 401) {
-//       SnackBarPage.show(
-//         type: SnackbarType.error,
-//         title: "Error!",
-//         description: "Invalid credentials.",
-//       );
-//     } else if (code == 404) {
-//       SnackBarPage.show(
-//         type: SnackbarType.error,
-//         title: "Error!",
-//         description: "API endpoint error.",
-//       );
-//     } else {
-//       SnackBarPage.show(
-//         type: SnackbarType.error,
-//         title: "Error!",
-//         description: "Unexpected error occurred (Code: $code).",
-//       );
-//     }
-//     pop(); // Hide loader
-//   }
-
-//   void _handleException(Exception e) {
-//     if (e is DioException) {
-//       SnackBarPage.show(
-//         type: SnackbarType.error,
-//         title: "Error!",
-//         description: getErrorMessage(e),
-//       );
-//     } else {
-//       SnackBarPage.show(
-//         type: SnackbarType.error,
-//         title: "Error!",
-//         description: "Something went wrong. Please try again.",
-//       );
-//     }
-//   }
-
-//   Future<void> checkUserState() async {
-//     bool isTokenValid = SharedPreferencesService.validateAccessToken();
-
-//     if (isTokenValid) {
-//       try {
-//         userToken = await _authAPI.signInWithToken(email: '', password: '');
-
-//         pushReplacementUntil(screen: const DashBoard());
-//       } catch (e) {
-//         //print('Error during token sign-in: $e');
-
-//         if (Pkeys.context.mounted) {
-//           Navigator.pushReplacement(Pkeys.context,
-//               MaterialPageRoute(builder: (_) => const AccessToken()));
-//         }
-//       }
-//     } else {
-//       if (Pkeys.context.mounted) {
-//         Navigator.pushReplacement(Pkeys.context,
-//             MaterialPageRoute(builder: (_) => const AccessToken()));
-//       }
-//     }
-//   }
-
-//   Future<void> forgotPassword(BuildContext context, String email) async {
-//     SnackBarPage.show(
-//       type: SnackbarType.success,
-//       title: "Success!",
-//       description: "Password reset link has been sent to your email.",
-//     );
-//   }
-// }
+  /// Checks the user state and navigates accordingly.
+  checkUserState() async {
+    if (SharedPreferencesService.validateAccessToken()) {
+      try {
+        userDetail = await _authAPI.getProfile();
+        pushReplacementUntil(screen: const Home());
+      } catch (e) {
+        // print(e);
+        Navigator.pushReplacement(Pkeys.context,
+            MaterialPageRoute(builder: (_) => const SignInPage()));
+      }
+    } else {
+      Navigator.pushReplacement(
+          Pkeys.context, MaterialPageRoute(builder: (_) => const SignInPage()));
+    }
+  }
+}

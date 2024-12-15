@@ -10,14 +10,14 @@ MCreateTask mCreateTaskFromJson(String str) =>
 String mCreateTaskToJson(MCreateTask data) => json.encode(data.toJson());
 
 class MCreateTask {
-  final String status;
-  final String message;
-  final Data data;
+  final String? status;
+  final String? message;
+  final Data? data;
 
   MCreateTask({
-    required this.status,
-    required this.message,
-    required this.data,
+    this.status,
+    this.message,
+    this.data,
   });
 
   factory MCreateTask.fromJson(Map<String, dynamic> json) => MCreateTask(
@@ -29,7 +29,7 @@ class MCreateTask {
   Map<String, dynamic> toJson() => {
         "status": status,
         "message": message,
-        "data": data.toJson(),
+        "data": data?.toJson(),
       };
 }
 

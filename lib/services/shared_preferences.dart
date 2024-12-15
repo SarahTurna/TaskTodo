@@ -17,7 +17,7 @@ class SharedPreferencesService {
   }
 
   static removeToken() {
-    _preferences.remove(Pkeys.token);
+    _preferences.remove(Pkeys.accessToken);
   }
 
   static Future<void> saveInt(String key, int value) async {
@@ -29,7 +29,7 @@ class SharedPreferencesService {
   }
 
   static bool validateAccessToken() {
-    final String? token = _preferences.getString(Pkeys.token);
+    final String? token = _preferences.getString(Pkeys.accessToken);
     if (token != null) {
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
       if (decodedToken.containsKey('exp')) {

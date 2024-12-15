@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:power_state/power_state.dart';
 import 'package:task_management/constants/constant.dart';
+import 'package:task_management/controllers/c_auth.dart';
+import 'package:task_management/controllers/c_internet.dart';
 import 'package:task_management/features/middleware/auth_check.dart';
 import 'package:task_management/services/dio%20service/dio_service.dart';
 import 'package:task_management/services/shared_preferences.dart';
@@ -12,7 +14,7 @@ import 'package:ud_design/ud_design.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //CInternet.initilizationAndListen();
+  CInternet.initilizationAndListen();
 
   await SharedPreferencesService.init();
   DioService.create();
@@ -49,7 +51,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     checkForUpdate();
-    //PowerVault.put(CAuth());
+    PowerVault.put(CAuth());
   }
 
   void checkForUpdate() async {
